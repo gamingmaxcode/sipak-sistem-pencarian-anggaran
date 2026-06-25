@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="SIPAK - Sistem Informasi Pencarian Anggaran Kegiatan Berbasis QR Code untuk Instansi Pemerintahan">
+    <meta name="theme-color" content="#0F172A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>SIPAK - Sistem Pencarian Anggaran Kegiatan</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            dark: 'auto',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: {
+                            900: '#0F172A',
+                            800: '#1E293B',
+                            700: '#334155',
+                            600: '#475569',
+                        },
+                        accent: {
+                            blue: '#3B82F6',
+                            purple: '#8B5CF6',
+                            cyan: '#06B6D4',
+                        },
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'slide-down': 'slideDown 0.5s ease-out',
+                        'scale-in': 'scaleIn 0.4s ease-out',
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-ring': 'pulseRing 2s ease-out infinite',
+                        'gradient': 'gradient 3s ease infinite',
+                        'bounce-in': 'bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                        'shimmer': 'shimmer 2s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideDown: {
+                            '0%': { opacity: '0', transform: 'translateY(-20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        scaleIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.8)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        pulseRing: {
+                            '0%': { transform: 'scale(1)', opacity: '1' },
+                            '100%': { transform: 'scale(1.5)', opacity: '0' },
+                        },
+                        gradient: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                        },
+                        bounceIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.3)' },
+                            '50%': { transform: 'scale(1.05)' },
+                            '70%': { transform: 'scale(0.9)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/custom.css">
+</head>
+<body class="bg-slate-50 dark:bg-dark-900 min-h-screen antialiased overflow-x-hidden">
+
+    <!-- ============================================ -->
+    <!-- APP CONTAINER -->
+    <!-- ============================================ -->
+    <div id="app" class="min-h-screen flex flex-col relative">
+
+        <!-- ============================================ -->
+        <!-- SPLASH SCREEN -->
+        <!-- ============================================ -->
+        <div id="splash-screen" class="fixed inset-0 z-[100] bg-dark-900 flex items-center justify-center">
+            <div class="text-center">
+                <!-- Logo Animation -->
+                <div id="splash-logo-container" class="relative inline-block mb-6">
+                    <div id="splash-logo-wrapper" class="w-24 h-24 rounded-3xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-2xl shadow-accent-blue/30 animate-bounce-in overflow-hidden">
+                        <!-- Logo Image (will be inserted by JS if custom logo is set) -->
+                        <svg id="splash-logo-default" class="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <!-- Pulse rings -->
+                    <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-accent-blue to-accent-purple animate-pulse-ring -z-10"></div>
+                </div>
+                <h1 class="text-2xl font-extrabold text-white mb-2 tracking-tight">SIPAK</h1>
+                <p class="text-sm text-slate-400">Memuat...</p>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- LANDING PAGE -->
+        <!-- ============================================ -->
+        <div id="landing-page" class="hidden min-h-screen flex flex-col">
+
+            <!-- Status Bar Spacer -->
+            <div class="h-12 bg-dark-900"></div>
+
+            <!-- Hero Header -->
+            <header class="bg-dark-900 text-white px-5 pt-6 pb-16 relative overflow-hidden">
+                <!-- Background Pattern -->
+                <div class="absolute inset-0 opacity-10">
+                    <div class="absolute top-10 right-10 w-64 h-64 bg-accent-blue rounded-full blur-3xl"></div>
+                    <div class="absolute bottom-0 left-0 w-48 h-48 bg-accent-purple rounded-full blur-3xl"></div>
+                </div>
+
+                <div class="relative">
+                    <!-- Logo & Title -->
+                    <div class="flex items-center gap-3 mb-8 animate-slide-up" style="animation-delay: 0.1s;">
+                        <!-- Logo Container - akan diganti dengan logo kustom jika ada -->
+                        <div id="landing-logo-container" class="relative">
+                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-lg overflow-hidden" id="landing-logo-wrapper">
+                                <!-- Logo Image (will be inserted by JS if custom logo is set) -->
+                                <svg id="landing-logo-default" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <div class="absolute -inset-1 rounded-2xl bg-gradient-to-br from-accent-blue to-accent-purple animate-pulse-ring -z-10"></div>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold tracking-tight">SIPAK</h1>
+                            <p class="text-xs text-slate-400">Sistem Pencarian Anggaran</p>
+                        </div>
+                    </div>
+
+                    <!-- Hero Text -->
+                    <div class="animate-slide-up" style="animation-delay: 0.2s;">
+                        <h2 class="text-3xl font-extrabold leading-tight mb-3">
+                            <span class="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                                Cek Anggaran
+                            </span>
+                            <br>
+                            <span class="text-slate-300">dalam Genggaman</span>
+                        </h2>
+                        <p class="text-sm text-slate-400 leading-relaxed max-w-xs">
+                            Pantau sisa anggaran kegiatan secara real-time langsung dari smartphone Anda
+                        </p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 -mt-10 px-5">
+                <div class="max-w-lg mx-auto">
+
+                    <!-- Search Card (Hero CTA) -->
+                    <section class="animate-slide-up" style="animation-delay: 0.3s;">
+                        <div class="relative group mb-8">
+                            <!-- Glow Effect -->
+                            <div class="absolute -inset-1 bg-gradient-to-r from-accent-blue via-accent-purple to-accent-cyan rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
+
+                            <div class="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-dark-900/50 p-2">
+                                <form id="landing-search-form" class="flex gap-2">
+                                    <div class="flex-1 relative">
+                                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            id="landing-kode-kegiatan"
+                                            placeholder="Masukkan Kode Kegiatan"
+                                            autocomplete="off"
+                                            autocapitalize="characters"
+                                            class="w-full pl-12 pr-4 py-4 text-base font-medium bg-slate-50 dark:bg-dark-700 border-0 rounded-xl focus:ring-2 focus:ring-accent-blue/20 placeholder:text-slate-400 transition-all duration-200"
+                                        >
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        class="flex-shrink-0 px-6 py-4 bg-gradient-to-r from-accent-blue to-accent-purple text-white font-semibold rounded-xl shadow-lg shadow-accent-blue/30 transition-all duration-300 flex items-center justify-center min-w-[60px] active:scale-95"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Features Grid -->
+                    <section class="mb-8 animate-slide-up" style="animation-delay: 0.4s;">
+                        <div class="grid grid-cols-3 gap-3">
+                            <!-- Feature 1 -->
+                            <div class="bg-white dark:bg-dark-800 rounded-2xl p-4 text-center shadow-sm border border-slate-100 dark:border-dark-700">
+                                <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-accent-blue/10 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-accent-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="font-semibold text-dark-900 dark:text-white text-sm mb-1">Real-time</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Data langsung dari Sheets</p>
+                            </div>
+
+                            <!-- Feature 2 -->
+                            <div class="bg-white dark:bg-dark-800 rounded-2xl p-4 text-center shadow-sm border border-slate-100 dark:border-dark-700">
+                                <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-success/10 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="font-semibold text-dark-900 dark:text-white text-sm mb-1">Aman</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Hanya baca data</p>
+                            </div>
+
+                            <!-- Feature 3 -->
+                            <div class="bg-white dark:bg-dark-800 rounded-2xl p-4 text-center shadow-sm border border-slate-100 dark:border-dark-700">
+                                <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-accent-purple/10 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-accent-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="font-semibold text-dark-900 dark:text-white text-sm mb-1">Mobile</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Optimasi HP</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- How It Works -->
+                    <section class="mb-8 animate-slide-up" style="animation-delay: 0.5s;">
+                        <h3 class="text-lg font-bold text-dark-900 dark:text-white mb-4">Cara Kerja</h3>
+                        <div class="space-y-3">
+                            <!-- Step 1 -->
+                            <div class="flex items-start gap-4 bg-white dark:bg-dark-800 rounded-2xl p-4 border border-slate-100 dark:border-dark-700">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-white font-bold text-sm">
+                                    1
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-dark-900 dark:text-white mb-1">Scan QR Code</h4>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400">Pindai QR Code yang tertera di ruang kerja atau dokumen</p>
+                                </div>
+                            </div>
+
+                            <!-- Step 2 -->
+                            <div class="flex items-start gap-4 bg-white dark:bg-dark-800 rounded-2xl p-4 border border-slate-100 dark:border-dark-700">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-accent-purple to-accent-cyan flex items-center justify-center text-white font-bold text-sm">
+                                    2
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-dark-900 dark:text-white mb-1">Masukkan Kode</h4>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400">Ketik kode kegiatan seperti KC-001 pada kolom pencarian</p>
+                                </div>
+                            </div>
+
+                            <!-- Step 3 -->
+                            <div class="flex items-start gap-4 bg-white dark:bg-dark-800 rounded-2xl p-4 border border-slate-100 dark:border-dark-700">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-success to-emerald-500 flex items-center justify-center text-white font-bold text-sm">
+                                    3
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-dark-900 dark:text-white mb-1">Lihat Anggaran</h4>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400">Data pagu, realizeasi, dan sisa anggaran langsung tampil</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Status Legend -->
+                    <section class="mb-8 animate-slide-up" style="animation-delay: 0.6s;">
+                        <h3 class="text-lg font-bold text-dark-900 dark:text-white mb-4">Status Anggaran</h3>
+                        <div class="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-slate-100 dark:border-dark-700">
+                            <div class="space-y-4">
+                                <!-- Green -->
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 rounded-full bg-gradient-to-r from-success to-emerald-400 flex-shrink-0"></div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-dark-900 dark:text-white text-sm">Dana Tersedia</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Penyerapan di bawah 70%</p>
+                                    </div>
+                                    <span class="text-xs font-medium text-success bg-success/10 px-2 py-1 rounded-full">&lt; 70%</span>
+                                </div>
+
+                                <!-- Yellow -->
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 rounded-full bg-gradient-to-r from-warning to-yellow-400 flex-shrink-0"></div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-dark-900 dark:text-white text-sm">Perhatian</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Penyerapan 70% - 90%</p>
+                                    </div>
+                                    <span class="text-xs font-medium text-warning bg-warning/10 px-2 py-1 rounded-full">70-90%</span>
+                                </div>
+
+                                <!-- Red -->
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 rounded-full bg-gradient-to-r from-danger to-red-400 flex-shrink-0"></div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-dark-900 dark:text-white text-sm">Kritis</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Penyerapan di atas 90%</p>
+                                    </div>
+                                    <span class="text-xs font-medium text-danger bg-danger/10 px-2 py-1 rounded-full">&gt; 90%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Quick Search CTA -->
+                    <section class="mb-8 animate-slide-up" style="animation-delay: 0.7s;">
+                        <button id="go-to-search" class="w-full py-4 bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold rounded-2xl shadow-lg shadow-accent-blue/30 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            Mulai Pencarian
+                        </button>
+                    </section>
+
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-white dark:bg-dark-800 border-t border-slate-200/50 dark:border-dark-700/50 mt-auto">
+                <div class="max-w-lg mx-auto px-5 py-6">
+                    <!-- Logo Small -->
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <div id="landing-footer-logo-wrapper" class="w-8 h-8 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center overflow-hidden">
+                            <!-- Logo Image (will be inserted by JS if custom logo is set) -->
+                            <svg id="landing-footer-logo-default" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="text-sm font-bold text-dark-900 dark:text-white">SIPAK</span>
+                    </div>
+                    <p id="landing-footer-instansi" class="text-center text-sm text-slate-500 dark:text-slate-400 mb-1">
+                        Kecamatan Sample, Kabupaten Contoh
+                    </p>
+                    <p class="text-center text-xs text-slate-400">
+                        © 2026 SIPAK • Transparansi Anggaran
+                    </p>
+                </div>
+            </footer>
+
+            <!-- Bottom Safe Area -->
+            <div class="h-8 bg-white dark:bg-dark-800 lg:hidden"></div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- MAIN APP PAGE -->
+        <!-- ============================================ -->
+        <div id="main-page" class="hidden min-h-screen flex flex-col">
+
+            <!-- Status Bar Spacer (Mobile) -->
+            <div class="h-11 bg-white dark:bg-dark-800 lg:hidden"></div>
+
+            <!-- Header -->
+            <header class="bg-white/80 dark:bg-dark-800/80 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-200/50 dark:border-dark-700/50">
+                <div class="max-w-lg mx-auto px-5 py-4">
+                    <div class="flex items-center justify-between">
+                        <!-- Back Button & Logo & Title -->
+                        <div class="flex items-center gap-3">
+                            <button id="back-to-landing" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-dark-700 flex items-center justify-center active:bg-slate-200 dark:active:bg-dark-600 transition-colors">
+                                <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                </svg>
+                            </button>
+
+                            <!-- Main Logo Container -->
+                            <div id="main-logo-container" class="flex items-center gap-2">
+                                <div id="main-logo-wrapper" class="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm overflow-hidden">
+                                    <!-- Logo Image (will be inserted by JS if custom logo is set) -->
+                                    <svg id="main-logo-default" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h1 class="text-base font-bold text-dark-900 dark:text-white leading-tight">SIPAK</h1>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400">Anggaran</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Indicator -->
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/10">
+                            <div class="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+                            <span class="text-[10px] font-semibold text-success">LIVE</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 px-5 py-6">
+                <div class="max-w-lg mx-auto">
+
+                    <!-- Search Section -->
+                    <section class="mb-6">
+                        <div class="relative group">
+                            <!-- Glow Effect -->
+                            <div class="absolute -inset-1 bg-gradient-to-r from-accent-blue via-accent-purple to-accent-cyan rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
+
+                            <!-- Search Card -->
+                            <div class="relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-dark-900/50 p-1.5">
+                                <form id="search-form" class="flex gap-2">
+                                    <!-- Input Wrapper -->
+                                    <div class="flex-1 relative">
+                                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            id="kode-kegiatan"
+                                            name="kode"
+                                            placeholder="KC-001"
+                                            autocomplete="off"
+                                            autocapitalize="characters"
+                                            class="w-full pl-12 pr-12 py-4 text-base font-mono font-medium bg-slate-50 dark:bg-dark-700 border-0 rounded-xl focus:ring-2 focus:ring-accent-blue/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-200"
+                                        >
+                                        <!-- Clear Button -->
+                                        <button
+                                            type="button"
+                                            id="clear-btn"
+                                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 opacity-0 scale-75 transition-all duration-200"
+                                            aria-label="Hapus input"
+                                        >
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <!-- Search Button -->
+                                    <button
+                                        type="submit"
+                                        id="search-btn"
+                                        class="flex-shrink-0 px-6 py-4 bg-gradient-to-r from-accent-blue to-accent-purple text-white font-semibold rounded-xl shadow-lg shadow-accent-blue/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300 flex items-center justify-center min-w-[60px] active:scale-95"
+                                    >
+                                        <svg id="search-icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                        <svg id="loading-icon" class="w-5 h-5 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Hint Text -->
+                        <p id="input-hint" class="text-center text-xs text-slate-400 mt-3 opacity-0 transition-opacity duration-200">
+                            Tekan <kbd class="px-1.5 py-0.5 bg-slate-100 dark:bg-dark-700 rounded text-slate-500 font-medium">Enter</kbd> untuk mencari
+                        </p>
+                    </section>
+
+                    <!-- Alert Banner -->
+                    <section id="alert-container" class="mb-6 hidden">
+                        <div id="alert-banner" class="relative overflow-hidden bg-gradient-to-r from-danger/10 to-danger/5 border border-danger/20 rounded-2xl p-4 backdrop-blur-sm">
+                            <div class="absolute inset-0 bg-gradient-to-r from-danger/5 to-transparent"></div>
+                            <div class="relative flex items-start gap-3">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-danger/15 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 pt-1">
+                                    <p class="text-sm font-semibold text-danger">Data Tidak Ditemukan</p>
+                                    <p id="alert-message" class="text-xs text-danger/80 mt-0.5">
+                                        Maaf, Kode Kegiatan tidak ditemukan atau salah input.
+                                    </p>
+                                </div>
+                                <button id="alert-close" class="flex-shrink-0 p-1 text-danger/40 hover:text-danger transition-colors">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Result Section -->
+                    <section id="result-section" class="hidden">
+
+                        <!-- Skeleton Loading -->
+                        <div id="result-skeleton" class="hidden animate-pulse">
+                            <div class="bg-white dark:bg-dark-800 rounded-3xl shadow-xl p-6 mb-4">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <div class="w-14 h-14 bg-slate-200 dark:bg-dark-700 rounded-2xl"></div>
+                                    <div class="flex-1">
+                                        <div class="h-3 bg-slate-200 dark:bg-dark-700 rounded w-24 mb-3"></div>
+                                        <div class="h-6 bg-slate-200 dark:bg-dark-700 rounded w-36"></div>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="h-4 bg-slate-200 dark:bg-dark-700 rounded w-full"></div>
+                                    <div class="h-4 bg-slate-200 dark:bg-dark-700 rounded w-4/5"></div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-lg p-4">
+                                    <div class="h-3 bg-slate-200 dark:bg-dark-700 rounded w-16 mb-2"></div>
+                                    <div class="h-6 bg-slate-200 dark:bg-dark-700 rounded w-28"></div>
+                                </div>
+                                <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-lg p-4">
+                                    <div class="h-3 bg-slate-200 dark:bg-dark-700 rounded w-16 mb-2"></div>
+                                    <div class="h-6 bg-slate-200 dark:bg-dark-700 rounded w-28"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Result Card -->
+                        <div id="result-card" class="animate-slide-up">
+
+                            <!-- Main Card -->
+                            <div class="bg-white dark:bg-dark-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-dark-900/50 overflow-hidden mb-4">
+
+                                <!-- Header with Gradient -->
+                                <div class="relative px-6 pt-6 pb-8">
+                                    <!-- Background Pattern -->
+                                    <div class="absolute inset-0 bg-gradient-to-br from-accent-blue/5 via-accent-purple/5 to-accent-cyan/5"></div>
+                                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-accent-blue/10 to-accent-purple/10 rounded-full blur-3xl"></div>
+
+                                    <div class="relative">
+                                        <!-- Header Row -->
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="flex items-center gap-3">
+                                                <!-- Activity Icon -->
+                                                <div id="card-icon-container" class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-lg">
+                                                    <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-0.5">
+                                                        Kode Kegiatan
+                                                    </p>
+                                                    <p id="card-kode" class="text-xl font-bold font-mono text-dark-900 dark:text-white tracking-wide">
+                                                        KC-001
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Status Badge -->
+                                            <div id="status-badge" class="px-3 py-1.5 rounded-full bg-success/10">
+                                                <span id="status-badge-text" class="text-xs font-bold text-success">Dana Tersedia</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Activity Name -->
+                                        <div class="pl-[62px]">
+                                            <p id="card-nama" class="text-base font-semibold text-slate-700 dark:text-slate-200 leading-snug">
+                                                Pembangunan Gedung Serba Guna
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stats Grid -->
+                                <div class="px-6 pb-6">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <!-- Pagu Card -->
+                                        <div class="bg-slate-50 dark:bg-dark-700/50 rounded-2xl p-4">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <div class="w-8 h-8 rounded-lg bg-accent-blue/10 flex items-center justify-center">
+                                                    <svg class="w-4 h-4 text-accent-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                </div>
+                                                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
+                                                    Pagu
+                                                </p>
+                                            </div>
+                                            <p id="card-pagu" class="text-lg font-bold text-dark-900 dark:text-white">
+                                                Rp 10.000.000
+                                            </p>
+                                        </div>
+
+                                        <!-- Realisasi Card -->
+                                        <div class="bg-slate-50 dark:bg-dark-700/50 rounded-2xl p-4">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <div class="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
+                                                    <svg class="w-4 h-4 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+                                                    </svg>
+                                                </div>
+                                                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
+                                                    Realisasi
+                                                </p>
+                                            </div>
+                                            <p id="card-realisasi" class="text-lg font-bold text-dark-900 dark:text-white">
+                                                Rp 6.500.000
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sisa Card -->
+                            <div class="relative mb-4">
+                                <!-- Glow -->
+                                <div class="absolute -inset-1 bg-gradient-to-r from-success via-emerald-500 to-accent-cyan rounded-2xl blur opacity-20"></div>
+
+                                <div class="relative bg-gradient-to-br from-success to-emerald-600 rounded-2xl p-5 text-white overflow-hidden">
+                                    <!-- Background Pattern -->
+                                    <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2"></div>
+
+                                    <div class="relative flex items-center justify-between">
+                                        <div>
+                                            <p class="text-emerald-100 text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
+                                                Sisa Anggaran
+                                            </p>
+                                            <p id="card-sisa" class="text-2xl font-extrabold tracking-tight">
+                                                Rp 3.500.000
+                                            </p>
+                                        </div>
+                                        <div id="card-sisa-icon" class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                            <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Card -->
+                            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-dark-900/50 p-5">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div>
+                                        <p class="text-sm font-semibold text-dark-900 dark:text-white mb-0.5">
+                                            Persentase Penyerapan
+                                        </p>
+                                        <p id="card-persentase" class="text-2xl font-extrabold text-dark-900 dark:text-white">
+                                            65%
+                                        </p>
+                                    </div>
+                                    <div id="card-status-icon" class="w-12 h-12 rounded-xl flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Progress Bar -->
+                                <div class="relative">
+                                    <div class="h-3 bg-slate-100 dark:bg-dark-700 rounded-full overflow-hidden">
+                                        <div id="card-progress-bar" class="h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                                    </div>
+                                    <!-- Glow Effect on Bar -->
+                                    <div id="progress-glow" class="absolute top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-white/50 blur-sm opacity-0 transition-opacity duration-500" style="right: 0"></div>
+                                </div>
+
+                                <!-- Progress Labels -->
+                                <div class="flex justify-between mt-2">
+                                    <span id="status-label" class="text-xs font-semibold text-success">Dana Tersedia</span>
+                                    <span class="text-xs text-slate-400">100%</span>
+                                </div>
+                            </div>
+
+                            <!-- Last Updated -->
+                            <p id="last-updated" class="text-center text-xs text-slate-400 mt-5 flex items-center justify-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>Pembaruan: 26 Juni 2026, 14:30 WIB</span>
+                            </p>
+                        </div>
+                    </section>
+
+                    <!-- Initial State (No Search Yet) -->
+                    <section id="initial-state" class="text-center py-8">
+                        <div class="relative inline-block mb-6">
+                            <!-- Floating Elements -->
+                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-accent-blue/10 rounded-2xl animate-float" style="animation-delay: 0s;"></div>
+                            <div class="absolute -bottom-2 -right-4 w-12 h-12 bg-accent-purple/10 rounded-xl animate-float" style="animation-delay: 0.5s;"></div>
+                            <div class="absolute top-1/2 -right-6 w-10 h-10 bg-accent-cyan/10 rounded-lg animate-float" style="animation-delay: 1s;"></div>
+
+                            <!-- Main Icon -->
+                            <div class="relative w-28 h-28 mx-auto">
+                                <div class="absolute inset-0 bg-gradient-to-br from-accent-blue/20 to-accent-purple/20 rounded-3xl blur-xl"></div>
+                                <div class="relative w-full h-full bg-gradient-to-br from-accent-blue to-accent-purple rounded-3xl flex items-center justify-center shadow-2xl shadow-accent-blue/30">
+                                    <svg class="w-14 h-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="text-lg font-bold text-dark-900 dark:text-white mb-2">
+                            Scan atau Ketik Kode
+                        </h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+                            Gunakan QR Code yang tersedia di ruang kerja atau ketik kode kegiatan secara manual
+                        </p>
+
+                        <!-- Quick Tips -->
+                        <div class="mt-8 flex flex-wrap justify-center gap-2">
+                            <span class="px-3 py-1.5 bg-slate-100 dark:bg-dark-700 rounded-full text-xs font-medium text-slate-600 dark:text-slate-300">
+                                🚀 Real-time
+                            </span>
+                            <span class="px-3 py-1.5 bg-slate-100 dark:bg-dark-700 rounded-full text-xs font-medium text-slate-600 dark:text-slate-300">
+                                🔒 Read-only
+                            </span>
+                            <span class="px-3 py-1.5 bg-slate-100 dark:bg-dark-700 rounded-full text-xs font-medium text-slate-600 dark:text-slate-300">
+                                📱 Mobile-first
+                            </span>
+                        </div>
+                    </section>
+
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-white dark:bg-dark-800 border-t border-slate-200/50 dark:border-dark-700/50 mt-auto">
+                <div class="max-w-lg mx-auto px-5 py-6">
+                    <!-- Logo Small -->
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <div id="footer-logo-wrapper" class="w-8 h-8 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center overflow-hidden">
+                            <!-- Logo Image (will be inserted by JS if custom logo is set) -->
+                            <svg id="footer-logo-default" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="text-sm font-bold text-dark-900 dark:text-white">SIPAK</span>
+                    </div>
+
+                    <p id="footer-instansi" class="text-center text-xs text-slate-500 dark:text-slate-400 mb-2">
+                        Kecamatan Sample, Kabupaten Contoh
+                    </p>
+                    <p class="text-center text-[10px] text-slate-400">
+                        Data bersumber dari Google Sheets Instansi • © 2026
+                    </p>
+                </div>
+            </footer>
+
+            <!-- Bottom Safe Area (Mobile) -->
+            <div class="h-8 bg-white dark:bg-dark-800 lg:hidden"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/sheets.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

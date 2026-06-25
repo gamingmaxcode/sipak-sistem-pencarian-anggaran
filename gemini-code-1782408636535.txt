@@ -1,0 +1,29 @@
+[ USER / PEGAWAI ]                  [ SISTEM WEB (SIPAK) ]             [ GOOGLE SHEETS API ]
+          │                                      │                                 │
+          │ 1. Scan QR Code                      │                                 │
+          ├─────────────────────────────────────►│                                 │
+          │                                      │                                 │
+          │ 2. Buka URL Web (Mobile)             │                                 │
+          │◄─────────────────────────────────────┤                                 │
+          │                                      │                                 │
+          │ 3. Input "Kode Kegiatan"             │                                 │
+          │    & Klik "Cari Anggaran"            │                                 │
+          ├─────────────────────────────────────►│                                 │
+          │                                      │ 4. Request Data via Fetch       │
+          │                                      ├────────────────────────────────►│
+          │                                      │                                 │
+          │                                      │ 5. Kembalikan Data (JSON/CSV)   │
+          │                                      │◄────────────────────────────────┤
+          │                                      │                                 │
+          │                                      │──┐ 6. Validasi & Cocokkan       │
+          │                                      │  │    Kode Kegiatan             │
+          │                                      │◄─┘                              │
+          │                                      │                                 │
+          │         [ APAKAH KODE DITEMUKAN? ]   │                                 │
+          │                      │               │                                 │
+          │         ┌────────────┴────────────┐  │                                 │
+          │         ▼ YA                      ▼ TIDAK                              │
+          │  7a. Tampilkan Card          7b. Tampilkan                             │
+          │      Detail Anggaran             Pesan Error                           │
+          │◄─────────────────────────────────────┴─────────────────────────────────┤
+          │                                      │                                 │
