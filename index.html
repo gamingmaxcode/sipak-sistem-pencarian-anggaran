@@ -695,6 +695,45 @@
                                 </svg>
                                 <span>Pembaruan: 26 Juni 2026, 14:30 WIB</span>
                             </p>
+
+                            <!-- Acara Breakdown Section (One-to-Many) -->
+                            <section id="acara-breakdown-container" class="hidden mt-6">
+                                <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-dark-900/50 overflow-hidden">
+                                    <!-- Header -->
+                                    <div class="px-5 py-4 border-b border-slate-100 dark:border-dark-700 bg-gradient-to-r from-accent-blue/5 to-accent-purple/5">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-xl bg-accent-blue/10 flex items-center justify-center">
+                                                    <svg class="w-5 h-5 text-accent-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <h3 class="text-sm font-bold text-dark-900 dark:text-white">Rincian Acara</h3>
+                                                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                                                        <span id="acara-count">0</span> acara dalam kegiatan ini
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <!-- Acara List (Accordion) -->
+                                    <div id="acara-list" class="px-5">
+                                        <!-- Items will be injected by JavaScript -->
+                                    </div>
+
+                                    <!-- Footer Info -->
+                                    <div class="px-5 py-3 border-t border-slate-100 dark:border-dark-700 bg-slate-50/50 dark:bg-dark-700/30">
+                                        <p class="text-[10px] text-slate-400 text-center">
+                                            Klik untuk melihat detail masing-masing acara
+                                        </p>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
                     </section>
 

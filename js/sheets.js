@@ -188,7 +188,7 @@ const SheetsHandler = {
                 let value = values[index] || '';
 
                 // Convert numeric values
-                if (header === 'pagu' || header === 'realisasi') {
+                if (header === 'pagu' || header === 'realisasi' || header === 'sisa_anggaran') {
                     value = Utils.parseUang(value);
                 }
 
@@ -253,7 +253,8 @@ const SheetsHandler = {
     normalizeHeader: function(header) {
         if (!header) return '';
 
-        const h = header.toLowerCase()
+        const h = header.toString()
+            .toLowerCase()
             .replace(/[^a-z0-9\s]/g, '') // Hapus special chars
             .replace(/\s+/g, '_')         // Spasi ke underscore
             .trim();
@@ -267,6 +268,10 @@ const SheetsHandler = {
             'nama_kegiatan': 'nama_kegiatan',
             'namakegiatan': 'nama_kegiatan',
             'kegiatan': 'nama_kegiatan',
+            'rincian': 'rincian',
+            'nama_acara': 'rincian',
+            'acara': 'rincian',
+            'keterangan': 'rincian',
             'pagu': 'pagu',
             'pagu_anggaran': 'pagu',
             'paguanggaran': 'pagu',
@@ -275,6 +280,9 @@ const SheetsHandler = {
             'realisasi_anggaran': 'realisasi',
             'realisasianggaran': 'realisasi',
             'terpakai': 'realisasi',
+            'sisa_anggaran': 'sisa_anggaran',
+            'sisaanggar': 'sisa_anggaran',
+            'sisa': 'sisa_anggaran',
         };
 
         return mappings[h] || h;
@@ -282,8 +290,9 @@ const SheetsHandler = {
 
     /**
      * Cari kegiatan berdasarkan kode
+     * Mendukung struktur One-to-Many: satu Kode Kegiatan bisa memiliki banyak baris Acara
      * @param {string} kode - Kode kegiatan
-     * @returns {Promise<Object|null>} Data kegiatan atau null
+     * @returns {Promise<Object|null>} Objek dengan data terakumulasi atau null
      */
     findByKode: async function(kode) {
         const normalizedKode = Utils.normalisasiKode(kode);
@@ -293,19 +302,55 @@ const SheetsHandler = {
         try {
             const data = await this.fetchData();
 
-            // Case-insensitive search
-            const result = data.find(item => {
+            // Filter semua baris yang cocok dengan kode (One-to-Many)
+            const matchedRows = data.filter(item => {
                 const itemKode = item.kode ? item.kode.toString().toUpperCase().trim() : '';
                 return itemKode === normalizedKode;
             });
 
-            if (result) {
-                Utils.debug('Kegiatan ditemukan:', result);
-            } else {
+            if (matchedRows.length === 0) {
                 Utils.debug('Kegiatan tidak ditemukan untuk kode:', normalizedKode);
+                return null;
             }
 
-            return result || null;
+            // Ambil nama_kegiatan dari baris pertama
+            const namaKegiatan = matchedRows[0].nama_kegiatan || '-';
+
+            // Akumulasi total dari semua baris
+            let totalPagu = 0;
+            let totalRealisasi = 0;
+
+            // Build array acara (breakdown per baris)
+            const acaraList = matchedRows.map(row => {
+                const pagu = row.pagu || 0;
+                const realizations = row.realisasi || 0;
+                // Gunakan sisa_anggaran jika ada, jika tidak hitung dari pagu - realizations
+                const sisa = row.sisa_anggaran !== undefined ? row.sisa_anggaran : (pagu - realizations);
+
+                totalPagu += pagu;
+                totalRealisasi += realizations;
+
+                return {
+                    nama_acara: row.rincian || row.nama_acara || row.acara || row.keterangan || '-',
+                    pagu: pagu,
+                    realisasi: realizations,
+                    sisa: sisa
+                };
+            });
+
+            const result = {
+                kode: normalizedKode,
+                nama_kegiatan: namaKegiatan,
+                totalPagu: totalPagu,
+                totalRealisasi: totalRealisasi,
+                totalSisa: totalPagu - totalRealisasi,
+                percentage: Utils.hitungPersentase(totalRealisasi, totalPagu),
+                acara: acaraList,
+                rowCount: matchedRows.length
+            };
+
+            Utils.debug('Kegiatan ditemukan:', result);
+            return result;
         } catch (error) {
             Utils.debug('Error saat mencari:', error);
             throw error;
@@ -341,51 +386,105 @@ const SheetsHandler = {
     /**
      * Generate sample data untuk testing
      * Data ini akan digunakan saat mode adalah 'sample'
+     * Mendukung struktur One-to-Many: satu Kode Kegiatan bisa memiliki banyak baris Acara
      * @returns {Array} Sample data
      */
     generateSampleData: function() {
         return [
+            // KC-001: 3 acara
             {
                 kode: 'KC-001',
                 nama_kegiatan: 'Pembangunan Gedung Serba Guna',
-                pagu: 150000000,
-                realizations: 97500000, // 65% - Hijau
+                rincian: 'Pembangunan Fisik Gedung',
+                pagu: 100000000,
+                realisasi: 65000000,
+                sisa_anggaran: 35000000,
+            },
+            {
+                kode: 'KC-001',
+                nama_kegiatan: 'Pembangunan Gedung Serba Guna',
+                rincian: 'Pengawasan Konstruksi',
+                pagu: 30000000,
+                realisasi: 19500000,
+                sisa_anggaran: 10500000,
+            },
+            {
+                kode: 'KC-001',
+                nama_kegiatan: 'Pembangunan Gedung Serba Guna',
+                rincian: 'Administrasi & Dokumentasi',
+                pagu: 20000000,
+                realisasi: 13000000,
+                sisa_anggaran: 7000000,
+            },
+            // KC-002: 2 acara
+            {
+                kode: 'KC-002',
+                nama_kegiatan: 'Pengadaan Alat Tulis Kantor',
+                rincian: 'Pengadaan ATK Kantor Pusat',
+                pagu: 15000000,
+                realisasi: 11700000,
+                sisa_anggaran: 3300000,
             },
             {
                 kode: 'KC-002',
                 nama_kegiatan: 'Pengadaan Alat Tulis Kantor',
-                pagu: 25000000,
-                realizations: 19500000, // 78% - Kuning
+                rincian: 'Pengadaan ATK Kantor Lapangan',
+                pagu: 10000000,
+                realisasi: 7800000,
+                sisa_anggaran: 2200000,
             },
+            // KC-003: 1 acara
             {
                 kode: 'KC-003',
                 nama_kegiatan: 'Pelatihan Teknologi Informasi',
+                rincian: 'Pelatihan Komputer Dasar',
                 pagu: 50000000,
-                realizations: 48000000, // 96% - Merah
+                realisasi: 48000000,
+                sisa_anggaran: 2000000,
+            },
+            // KC-004: 2 acara
+            {
+                kode: 'KC-004',
+                nama_kegiatan: 'Perbaikan Jalan Desa',
+                rincian: 'Perbaikan Jalan Utama',
+                pagu: 150000000,
+                realisasi: 93750000,
+                sisa_anggaran: 56250000,
             },
             {
                 kode: 'KC-004',
                 nama_kegiatan: 'Perbaikan Jalan Desa',
-                pagu: 200000000,
-                realizations: 125000000, // 62.5% - Hijau
+                rincian: 'Pemasangan Drainase',
+                pagu: 50000000,
+                realisasi: 31250000,
+                sisa_anggaran: 18750000,
             },
+            // KC-005: 1 acara
             {
                 kode: 'KC-005',
                 nama_kegiatan: 'Penyuluhan Kesehatan Masyarakat',
+                rincian: 'Penyuluhan PHBS',
                 pagu: 35000000,
-                realizations: 28700000, // 82% - Kuning
+                realisasi: 28700000,
+                sisa_anggaran: 6300000,
             },
+            // KC-006: 1 acara
             {
                 kode: 'KC-006',
                 nama_kegiatan: 'Pengadaan Bibit Tanaman Holtikultura',
+                rincian: 'Pengadaan & Penanaman Bibit',
                 pagu: 75000000,
-                realizations: 45000000, // 60% - Hijau
+                realisasi: 45000000,
+                sisa_anggaran: 30000000,
             },
+            // KC-007: 1 acara
             {
                 kode: 'KC-007',
                 nama_kegiatan: 'Pemeliharaan Gedung Kantor',
+                rincian: 'Pemeliharaan Rutin Kantor',
                 pagu: 100000000,
-                realizations: 92500000, // 92.5% - Merah
+                realisasi: 92500000,
+                sisa_anggaran: 7500000,
             },
         ];
     },

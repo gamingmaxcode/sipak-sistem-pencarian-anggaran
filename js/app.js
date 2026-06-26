@@ -475,23 +475,24 @@ const App = {
 
     /**
      * Show result card
-     * @param {Object} kegiatan
+     * @param {Object} kegiatan - Data kegiatan dengan struktur One-to-Many
      */
     showResult: function(kegiatan) {
-        // Calculate values
-        const pagu = kegiatan.pagu || 0;
-        const realizeasi = kegiatan.realisasi || 0;
-        const sisa = pagu - realizeasi;
-        const persentase = Utils.hitungPersentase(realizeasi, pagu);
-        const status = Utils.getStatus(persentase);
+        // Extract data dari struktur One-to-Many
+        const pagu = kegiatan.totalPagu || 0;
+        const real = kegiatan.totalRealisasi || 0;
+        const sisa = kegiatan.totalSisa || (pagu - real);
+        const percentage = kegiatan.percentage || Utils.hitungPersentase(real, pagu);
+        const status = Utils.getStatus(percentage);
+        const acaraList = kegiatan.acara || [];
 
         // Update card content
         this.elements.cardKode.textContent = Utils.escapeHtml(kegiatan.kode || '-');
         this.elements.cardNama.textContent = Utils.escapeHtml(kegiatan.nama_kegiatan || '-');
         this.elements.cardPagu.textContent = Utils.formatUang(pagu);
-        this.elements.cardRealisasi.textContent = Utils.formatUang(realizeasi);
+        this.elements.cardRealisasi.textContent = Utils.formatUang(real);
         this.elements.cardSisa.textContent = Utils.formatUang(sisa);
-        this.elements.cardPersentase.textContent = `${persentase}%`;
+        this.elements.cardPersentase.textContent = `${percentage}%`;
 
         // Update status badge
         this.elements.statusBadge.className = 'px-3 py-1.5 rounded-full';
@@ -525,6 +526,9 @@ const App = {
             this.elements.cardProgressBar.style.background = 'linear-gradient(90deg, #EF4444, #F87171, #FCA5A5)';
         }
 
+        // Build acara breakdown list (akordeon)
+        this.buildAcaraBreakdown(acaraList, percentage);
+
         // Show section with animation
         this.elements.resultSection.classList.remove('hidden');
 
@@ -542,11 +546,11 @@ const App = {
 
         // Animate progress bar
         setTimeout(() => {
-            this.elements.cardProgressBar.style.width = `${Math.min(persentase, 100)}%`;
+            this.elements.cardProgressBar.style.width = `${Math.min(percentage, 100)}%`;
 
             // Show and animate glow
             this.elements.progressGlow.style.opacity = '1';
-            this.elements.progressGlow.style.right = `${Math.min(persentase, 99)}%`;
+            this.elements.progressGlow.style.right = `${Math.min(percentage, 99)}%`;
         }, 100);
 
         // Update last updated
@@ -562,6 +566,123 @@ const App = {
                 block: 'start'
             });
         }, 100);
+    },
+
+    /**
+     * Build acara breakdown list (akordeon)
+     * @param {Array} acaraList - Array of acara objects
+     * @param {number} totalPercentage - Total percentage for overall status
+     */
+    buildAcaraBreakdown: function(acaraList, totalPercentage) {
+        const container = document.getElementById('acara-breakdown-container');
+        const listContainer = document.getElementById('acara-list');
+
+        if (!container || !listContainer) return;
+
+        // Clear existing content
+        listContainer.innerHTML = '';
+
+        // Hide container if no acara or only one (show main card only)
+        if (!acaraList || acaraList.length <= 1) {
+            container.classList.add('hidden');
+            return;
+        }
+
+        // Show container
+        container.classList.remove('hidden');
+
+        // Update header info
+        const countEl = document.getElementById('acara-count');
+        if (countEl) {
+            countEl.textContent = acaraList.length;
+        }
+
+        // Build each acara item
+        acaraList.forEach((acara, index) => {
+            const acaraPercentage = Utils.hitungPersentase(acara.realisasi || 0, acara.pagu || 0);
+            const acaraStatus = Utils.getStatus(acaraPercentage);
+
+            const item = document.createElement('div');
+            item.className = 'border-b border-slate-100 dark:border-dark-700 last:border-b-0';
+            item.innerHTML = `
+                <button
+                    class="acara-accordion-btn w-full flex items-center justify-between py-4 px-1 text-left hover:bg-slate-50 dark:hover:bg-dark-700/30 transition-colors duration-200 rounded-xl"
+                    data-index="${index}"
+                    aria-expanded="false"
+                >
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-dark-900 dark:text-white break-words">${Utils.escapeHtml(acara.nama_acara || '-')}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            ${Utils.formatUang(acara.pagu || 0)} pagu
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <div class="text-right">
+                            <p class="text-sm font-semibold" style="color: ${acaraStatus.color}">
+                                ${Utils.formatUang(acara.sisa || 0)}
+                            </p>
+                            <p class="text-[10px] text-slate-400">sisa</p>
+                        </div>
+                        <svg class="acara-chevron w-5 h-5 text-slate-400 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                </button>
+                <div class="acara-accordion-content hidden pb-4">
+                    <div class="bg-slate-50 dark:bg-dark-700/50 rounded-xl p-4 ml-0">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="text-center">
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Pagu</p>
+                                <p class="text-sm font-bold text-dark-900 dark:text-white">${Utils.formatUang(acara.pagu || 0)}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Realisasi</p>
+                                <p class="text-sm font-bold text-dark-900 dark:text-white">${Utils.formatUang(acara.realisasi || 0)}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Sisa</p>
+                                <p class="text-sm font-bold" style="color: ${acaraStatus.color}">${Utils.formatUang(acara.sisa || 0)}</p>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-slate-500">Penyerapan</span>
+                                <span class="font-semibold" style="color: ${acaraStatus.color}">${acaraPercentage}%</span>
+                            </div>
+                            <div class="h-2 bg-slate-200 dark:bg-dark-600 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-500" style="width: ${Math.min(acaraPercentage, 100)}%; background: ${acaraStatus.color}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add click handler for accordion
+            const btn = item.querySelector('.acara-accordion-btn');
+            const content = item.querySelector('.acara-accordion-content');
+            const chevron = item.querySelector('.acara-chevron');
+
+            btn.addEventListener('click', () => {
+                const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+                // Close all others first (optional - for single open behavior)
+                // document.querySelectorAll('.acara-accordion-content').forEach(el => el.classList.add('hidden'));
+                // document.querySelectorAll('.acara-accordion-btn').forEach(el => el.setAttribute('aria-expanded', 'false'));
+                // document.querySelectorAll('.acara-chevron').forEach(el => el.classList.remove('rotate-180'));
+
+                if (isExpanded) {
+                    content.classList.add('hidden');
+                    btn.setAttribute('aria-expanded', 'false');
+                    chevron.classList.remove('rotate-180');
+                } else {
+                    content.classList.remove('hidden');
+                    btn.setAttribute('aria-expanded', 'true');
+                    chevron.classList.add('rotate-180');
+                }
+            });
+
+            listContainer.appendChild(item);
+        });
     },
 
     /**

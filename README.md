@@ -17,9 +17,13 @@ Ikuti panduan di bawah ini untuk setup lengkap.
 1. Buat spreadsheet baru di Google Sheets
 2. Tambahkan kolom dengan header berikut:
 
-| KODE | NAMA_KEGIATAN | PAGU | REALISASI |
-|------|---------------|------|-----------|
-| KC-001 | Pembangunan Gedung | 150000000 | 97500000 |
+| KODE | NAMA_KEGIATAN | RINCIAN | PAGU | REALISASI | SISA ANGGARAN |
+|------|---------------|---------|------|-----------|---------------|
+| KC-001 | Pembangunan Gedung | Pembangunan Fisik | 100000000 | 65000000 | 35000000 |
+| KC-001 | Pembangunan Gedung | Pengawasan | 30000000 | 19500000 | 10500000 |
+| KC-001 | Pembangunan Gedung | Administrasi | 20000000 | 13000000 | 7000000 |
+
+> **Catatan:** Satu KODE bisa memiliki beberapa baris dengan RINCIAN berbeda. Kolom SISA ANGGARAN bisa dihitung otomatis atau diinput manual.
 
 3. **CATAT:** Spreadsheet ID ada di URL:
    ```
@@ -34,44 +38,66 @@ Ikuti panduan di bawah ini untuk setup lengkap.
 
 ```javascript
 function doGet(e) {
+  // ============================================
+  // KONFIGURASI - GANTI NILAI DI BAWAH INI
+  // ============================================
+
   // GANTI DENGAN SPREADSHEET ID ANDA
   const SPREADSHEET_ID = 'MASUKKAN_SPREADSHEET_ID_ANDA_DISINI';
-  
+
   // GANTI DENGAN NAMA SHEET ANDA (default: Sheet1)
   const SHEET_NAME = 'Sheet1';
-  
+
+  // ============================================
+  // LOGIKA - TIDAK PERLU DIUBAH
+  // ============================================
+
   try {
     const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
     const sheet = spreadsheet.getSheetByName(SHEET_NAME) || spreadsheet.getSheets()[0];
     const data = sheet.getDataRange().getValues();
-    
+
     // Convert to array of objects
     const headers = data[0];
     const result = [];
-    
+
     for (let i = 1; i < data.length; i++) {
       const row = {};
       headers.forEach((header, index) => {
-        row[header.toString().trim().toLowerCase().replace(/\s+/g, '_')] = data[i][index];
+        // Normalize header: lowercase, hapus spasi, ganti spasi dengan underscore
+        const normalizedHeader = header.toString()
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, '_')
+          .replace(/[^a-z0-9_]/g, '');
+
+        row[normalizedHeader] = data[i][index];
       });
-      
-      // Convert numeric values
-      if (row.pagu !== undefined) row.pagu = Number(row.pagu) || 0;
-      if (row.realisasi !== undefined) row.realisasi = Number(row.realisasi) || 0;
-      
-      // Skip empty rows
+
+      // Convert numeric values untuk PAGU, REALISASI, SISA_ANGGARAN
+      if (row.pagu !== undefined) {
+        row.pagu = Number(row.pagu) || 0;
+      }
+      if (row.realisasi !== undefined) {
+        row.realisasi = Number(row.realisasi) || 0;
+      }
+      if (row.sisa_anggaran !== undefined) {
+        row.sisa_anggaran = Number(row.sisa_anggaran) || 0;
+      }
+
+      // Skip empty rows (tanpa kode)
       if (row.kode) {
         result.push(row);
       }
     }
-    
+
     return ContentService
       .createTextOutput(JSON.stringify({
         status: 'success',
         data: result
       }))
       .setMimeType(ContentService.MimeType.JSON);
-      
+
   } catch (error) {
     return ContentService
       .createTextOutput(JSON.stringify({
@@ -82,6 +108,17 @@ function doGet(e) {
   }
 }
 ```
+
+**Penjelasan Header Mapping:**
+
+| Header di Sheets | Property di JavaScript |
+|------------------|----------------------|
+| KODE | `kode` |
+| NAMA_KEGIATAN | `nama_kegiatan` |
+| RINCIAN | `rincian` (digunakan sebagai `nama_acara`) |
+| PAGU | `pagu` |
+| REALISASI | `realisasi` |
+| SISA ANGGARAN | `sisa_anggaran` (opsional - bisa dihitung otomatis)
 
 4. Klik **Save** (Ctrl+S)
 5. Klik **Deploy** → **New deployment**

@@ -36,8 +36,8 @@ const CONFIG = {
         type: 'appsscript', // <-- GANTI KE 'appsscript' SETELAH SETUP
 
         // --- Untuk Google Apps Script ---
-        appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyHDOTDMdcK1ZNr7b1RyLFXUV9_5TCfBRiO-8Q-q-5wNPdD2Cs4oOiOj-lkSkPuGDS7/exec',
-        spreadsheetId: '1-63xyWz44kvUgVWkD_KF1s8IYOV3nqbO80rhXIWfZ50',
+        appsScriptUrl: 'https://script.google.com/macros/s/AKfycbwv4YuWRm1Ag7q8HyzR_fxfz3f3kxYbuCU7GaI-qR9LaiLqY4BbDmkxVNDU6nbETtbF/exec',
+        spreadsheetId: '13o8EeMMPsX0ePDuWmyzsEOWhghS2PzFh9QofWBaLAmQ',
         sheetId: 0,
     },
 
