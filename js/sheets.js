@@ -93,9 +93,9 @@ const SheetsHandler = {
      * @param {string} url - URL CSV
      * @returns {Promise<Array>} Array of objects
      */
-    fetchFromCSV: async function(url) {
+    fetchFromCSV: function(url) {
         try {
-            const response = await this.fetchWithTimeout(url, CONFIG.app.fetchTimeout);
+            const response = this.fetchWithTimeout(url, CONFIG.app.fetchTimeout);
 
             if (!response) {
                 throw new Error('Gagal mengambil data dari Google Sheets');
@@ -119,14 +119,14 @@ const SheetsHandler = {
      * Fetch dengan timeout
      * @param {string} url - URL untuk fetch
      * @param {number} timeout - Timeout dalam ms
-     * @returns {Promise<string>} Response text
+     * @returns {string} Response text
      */
-    fetchWithTimeout: async function(url, timeout = 15000) {
+    fetchWithTimeout: function(url, timeout = 15000) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
         try {
-            const response = await fetch(url, {
+            const response = fetch(url, {
                 method: 'GET',
                 signal: controller.signal,
                 headers: {
@@ -144,7 +144,7 @@ const SheetsHandler = {
                 throw new Error('Spreadsheet belum dipublikasi. Pastikan spreadsheet dipublikasi ke web.');
             }
 
-            return await response.text();
+            return response.text();
         } finally {
             clearTimeout(timeoutId);
         }
@@ -189,6 +189,8 @@ const SheetsHandler = {
 
                 // Convert numeric values
                 if (header === 'pagu' || header === 'realisasi' || header === 'sisa_anggaran') {
+                    value = Utils.parseUang(value);
+                } else if (header === 'vol') {
                     value = Utils.parseUang(value);
                 }
 
@@ -272,6 +274,12 @@ const SheetsHandler = {
             'nama_acara': 'rincian',
             'acara': 'rincian',
             'keterangan': 'rincian',
+            'satuan': 'satuan',
+            'vol': 'vol',
+            'volume': 'vol',
+            'jenis_pengadaan': 'jenis_pengadaan',
+            'jenis': 'jenis_pengadaan',
+            'jenispengadaan': 'jenis_pengadaan',
             'pagu': 'pagu',
             'pagu_anggaran': 'pagu',
             'paguanggaran': 'pagu',
@@ -323,17 +331,20 @@ const SheetsHandler = {
             // Build array acara (breakdown per baris)
             const acaraList = matchedRows.map(row => {
                 const pagu = row.pagu || 0;
-                const realizations = row.realisasi || 0;
+                const realise = row.realisasi || 0;
                 // Gunakan sisa_anggaran jika ada, jika tidak hitung dari pagu - realizations
-                const sisa = row.sisa_anggaran !== undefined ? row.sisa_anggaran : (pagu - realizations);
+                const sisa = row.sisa_anggaran !== undefined ? row.sisa_anggaran : (pagu - realise);
 
                 totalPagu += pagu;
-                totalRealisasi += realizations;
+                totalRealisasi += realise;
 
                 return {
                     nama_acara: row.rincian || row.nama_acara || row.acara || row.keterangan || '-',
+                    satuan: row.satuan || '-',
+                    vol: row.vol || 0,
+                    jenis_pengadaan: row.jenis_pengadaan || '-',
                     pagu: pagu,
-                    realisasi: realizations,
+                    realizations: realise,
                     sisa: sisa
                 };
             });
@@ -396,24 +407,33 @@ const SheetsHandler = {
                 kode: 'KC-001',
                 nama_kegiatan: 'Pembangunan Gedung Serba Guna',
                 rincian: 'Pembangunan Fisik Gedung',
+                satuan: 'Unit',
+                vol: 1,
+                jenis_pengadaan: 'Barang',
                 pagu: 100000000,
-                realisasi: 65000000,
+                realization: 65000000,
                 sisa_anggaran: 35000000,
             },
             {
                 kode: 'KC-001',
                 nama_kegiatan: 'Pembangunan Gedung Serba Guna',
                 rincian: 'Pengawasan Konstruksi',
+                satuan: 'Paket',
+                vol: 1,
+                jenis_pengadaan: 'Jasa',
                 pagu: 30000000,
-                realisasi: 19500000,
+                realization: 19500000,
                 sisa_anggaran: 10500000,
             },
             {
                 kode: 'KC-001',
                 nama_kegiatan: 'Pembangunan Gedung Serba Guna',
                 rincian: 'Administrasi & Dokumentasi',
+                satuan: 'Buah',
+                vol: 10,
+                jenis_pengadaan: 'Barang',
                 pagu: 20000000,
-                realisasi: 13000000,
+                realization: 13000000,
                 sisa_anggaran: 7000000,
             },
             // KC-002: 2 acara
@@ -421,16 +441,22 @@ const SheetsHandler = {
                 kode: 'KC-002',
                 nama_kegiatan: 'Pengadaan Alat Tulis Kantor',
                 rincian: 'Pengadaan ATK Kantor Pusat',
+                satuan: 'Paket',
+                vol: 1,
+                jenis_pengadaan: 'Barang',
                 pagu: 15000000,
-                realisasi: 11700000,
+                realization: 11700000,
                 sisa_anggaran: 3300000,
             },
             {
                 kode: 'KC-002',
                 nama_kegiatan: 'Pengadaan Alat Tulis Kantor',
                 rincian: 'Pengadaan ATK Kantor Lapangan',
+                satuan: 'Paket',
+                vol: 2,
+                jenis_pengadaan: 'Barang',
                 pagu: 10000000,
-                realisasi: 7800000,
+                realization: 7800000,
                 sisa_anggaran: 2200000,
             },
             // KC-003: 1 acara
@@ -438,8 +464,11 @@ const SheetsHandler = {
                 kode: 'KC-003',
                 nama_kegiatan: 'Pelatihan Teknologi Informasi',
                 rincian: 'Pelatihan Komputer Dasar',
+                satuan: 'Orang',
+                vol: 25,
+                jenis_pengadaan: 'Jasa',
                 pagu: 50000000,
-                realisasi: 48000000,
+                realization: 48000000,
                 sisa_anggaran: 2000000,
             },
             // KC-004: 2 acara
@@ -447,16 +476,22 @@ const SheetsHandler = {
                 kode: 'KC-004',
                 nama_kegiatan: 'Perbaikan Jalan Desa',
                 rincian: 'Perbaikan Jalan Utama',
+                satuan: 'Meter',
+                vol: 500,
+                jenis_pengadaan: 'Pekerjaan Konstruksi',
                 pagu: 150000000,
-                realisasi: 93750000,
+                realization: 93750000,
                 sisa_anggaran: 56250000,
             },
             {
                 kode: 'KC-004',
                 nama_kegiatan: 'Perbaikan Jalan Desa',
                 rincian: 'Pemasangan Drainase',
+                satuan: 'Meter',
+                vol: 200,
+                jenis_pengadaan: 'Pekerjaan Konstruksi',
                 pagu: 50000000,
-                realisasi: 31250000,
+                realization: 31250000,
                 sisa_anggaran: 18750000,
             },
             // KC-005: 1 acara
@@ -464,8 +499,11 @@ const SheetsHandler = {
                 kode: 'KC-005',
                 nama_kegiatan: 'Penyuluhan Kesehatan Masyarakat',
                 rincian: 'Penyuluhan PHBS',
+                satuan: 'Kali',
+                vol: 4,
+                jenis_pengadaan: 'Jasa',
                 pagu: 35000000,
-                realisasi: 28700000,
+                realization: 28700000,
                 sisa_anggaran: 6300000,
             },
             // KC-006: 1 acara
@@ -473,8 +511,11 @@ const SheetsHandler = {
                 kode: 'KC-006',
                 nama_kegiatan: 'Pengadaan Bibit Tanaman Holtikultura',
                 rincian: 'Pengadaan & Penanaman Bibit',
+                satuan: 'Bibit',
+                vol: 500,
+                jenis_pengadaan: 'Barang',
                 pagu: 75000000,
-                realisasi: 45000000,
+                realization: 45000000,
                 sisa_anggaran: 30000000,
             },
             // KC-007: 1 acara
@@ -482,8 +523,11 @@ const SheetsHandler = {
                 kode: 'KC-007',
                 nama_kegiatan: 'Pemeliharaan Gedung Kantor',
                 rincian: 'Pemeliharaan Rutin Kantor',
+                satuan: 'Bulan',
+                vol: 12,
+                jenis_pengadaan: 'Jasa',
                 pagu: 100000000,
-                realisasi: 92500000,
+                realization: 92500000,
                 sisa_anggaran: 7500000,
             },
         ];

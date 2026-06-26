@@ -231,8 +231,13 @@ sipak/
 |--------|---------|------|
 | KODE | KODE_KEGIATAN | string |
 | NAMA_KEGIATAN | NAMA, KEGIATAN | string |
+| RINCIAN | NAMA_ACARA, ACARA, KETERANGAN | string |
+| SATUAN | - | string |
+| VOL | VOLUME | number |
+| JENIS_PENGADAAN | JENIS | string |
 | PAGU | PAGU_ANGGARAN, ANGGARAN | number |
 | REALISASI | REALISASI_ANGGARAN | number |
+| SISA_ANGGARAN | SISA | number |
 
 ---
 

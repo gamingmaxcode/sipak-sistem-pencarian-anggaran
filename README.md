@@ -17,13 +17,13 @@ Ikuti panduan di bawah ini untuk setup lengkap.
 1. Buat spreadsheet baru di Google Sheets
 2. Tambahkan kolom dengan header berikut:
 
-| KODE | NAMA_KEGIATAN | RINCIAN | PAGU | REALISASI | SISA ANGGARAN |
-|------|---------------|---------|------|-----------|---------------|
-| KC-001 | Pembangunan Gedung | Pembangunan Fisik | 100000000 | 65000000 | 35000000 |
-| KC-001 | Pembangunan Gedung | Pengawasan | 30000000 | 19500000 | 10500000 |
-| KC-001 | Pembangunan Gedung | Administrasi | 20000000 | 13000000 | 7000000 |
+| KODE | NAMA_KEGIATAN | RINCIAN | SATUAN | VOL | JENIS_PENGADAAN | PAGU | REALISASI | SISA ANGGARAN |
+|------|---------------|---------|--------|-----|-----------------|------|-----------|---------------|
+| KC-001 | Pembangunan Gedung | Pembangunan Fisik | Unit | 1 | Barang | 100000000 | 65000000 | 35000000 |
+| KC-001 | Pembangunan Gedung | Pengawasan | Paket | 1 | Jasa | 30000000 | 19500000 | 10500000 |
+| KC-001 | Pembangunan Gedung | Administrasi | Buah | 10 | Barang | 20000000 | 13000000 | 7000000 |
 
-> **Catatan:** Satu KODE bisa memiliki beberapa baris dengan RINCIAN berbeda. Kolom SISA ANGGARAN bisa dihitung otomatis atau diinput manual.
+> **Catatan:** Satu KODE bisa memiliki beberapa baris dengan RINCIAN berbeda. Kolom baru SATUAN, VOL, dan JENIS_PENGADAAN akan ditampilkan dalam detail kegiatan.
 
 3. **CATAT:** Spreadsheet ID ada di URL:
    ```
@@ -74,7 +74,7 @@ function doGet(e) {
         row[normalizedHeader] = data[i][index];
       });
 
-      // Convert numeric values untuk PAGU, REALISASI, SISA_ANGGARAN
+      // Convert numeric values untuk PAGU, REALISASI, SISA_ANGGARAN, VOL
       if (row.pagu !== undefined) {
         row.pagu = Number(row.pagu) || 0;
       }
@@ -83,6 +83,9 @@ function doGet(e) {
       }
       if (row.sisa_anggaran !== undefined) {
         row.sisa_anggaran = Number(row.sisa_anggaran) || 0;
+      }
+      if (row.vol !== undefined) {
+        row.vol = Number(row.vol) || 0;
       }
 
       // Skip empty rows (tanpa kode)
@@ -116,9 +119,12 @@ function doGet(e) {
 | KODE | `kode` |
 | NAMA_KEGIATAN | `nama_kegiatan` |
 | RINCIAN | `rincian` (digunakan sebagai `nama_acara`) |
+| SATUAN | `satuan` |
+| VOL | `vol` |
+| JENIS_PENGADAAN | `jenis_pengadaan` |
 | PAGU | `pagu` |
 | REALISASI | `realisasi` |
-| SISA ANGGARAN | `sisa_anggaran` (opsional - bisa dihitung otomatis)
+| SISA ANGGARAN | `sisa_anggaran` (opsional - bisa dihitung otomatis) |
 
 4. Klik **Save** (Ctrl+S)
 5. Klik **Deploy** → **New deployment**

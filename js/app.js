@@ -599,7 +599,7 @@ const App = {
 
         // Build each acara item
         acaraList.forEach((acara, index) => {
-            const acaraPercentage = Utils.hitungPersentase(acara.realisasi || 0, acara.pagu || 0);
+            const acaraPercentage = Utils.hitungPersentase(acara.realizations || 0, acara.pagu || 0);
             const acaraStatus = Utils.getStatus(acaraPercentage);
 
             const item = document.createElement('div');
@@ -614,6 +614,9 @@ const App = {
                         <p class="text-sm font-medium text-dark-900 dark:text-white break-words">${Utils.escapeHtml(acara.nama_acara || '-')}</p>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             ${Utils.formatUang(acara.pagu || 0)} pagu
+                            ${acara.satuan && acara.satuan !== '-' ? ` • ${acara.satuan}` : ''}
+                            ${acara.vol ? ` • Vol: ${acara.vol}` : ''}
+                            ${acara.jenis_pengadaan && acara.jenis_pengadaan !== '-' ? ` • ${acara.jenis_pengadaan}` : ''}
                         </p>
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">
@@ -630,25 +633,39 @@ const App = {
                 </button>
                 <div class="acara-accordion-content hidden pb-4">
                     <div class="bg-slate-50 dark:bg-dark-700/50 rounded-xl p-4 ml-0">
-                        <div class="grid grid-cols-3 gap-3">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                            <div class="text-center">
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Satuan</p>
+                                <p class="text-sm font-bold text-dark-900 dark:text-white">${Utils.escapeHtml(acara.satuan || '-')}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Volume</p>
+                                <p class="text-sm font-bold text-dark-900 dark:text-white">${acara.vol || '-'}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Jenis</p>
+                                <p class="text-sm font-bold text-dark-900 dark:text-white">${Utils.escapeHtml(acara.jenis_pengadaan || '-')}</p>
+                            </div>
                             <div class="text-center">
                                 <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Pagu</p>
                                 <p class="text-sm font-bold text-dark-900 dark:text-white">${Utils.formatUang(acara.pagu || 0)}</p>
                             </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
                             <div class="text-center">
                                 <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Realisasi</p>
-                                <p class="text-sm font-bold text-dark-900 dark:text-white">${Utils.formatUang(acara.realisasi || 0)}</p>
+                                <p class="text-sm font-bold text-dark-900 dark:text-white">${Utils.formatUang(acara.realizations || 0)}</p>
                             </div>
                             <div class="text-center">
                                 <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Sisa</p>
                                 <p class="text-sm font-bold" style="color: ${acaraStatus.color}">${Utils.formatUang(acara.sisa || 0)}</p>
                             </div>
+                            <div class="text-center">
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">%</p>
+                                <p class="text-sm font-bold" style="color: ${acaraStatus.color}">${acaraPercentage}%</p>
+                            </div>
                         </div>
                         <div class="mt-3">
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="text-slate-500">Penyerapan</span>
-                                <span class="font-semibold" style="color: ${acaraStatus.color}">${acaraPercentage}%</span>
-                            </div>
                             <div class="h-2 bg-slate-200 dark:bg-dark-600 rounded-full overflow-hidden">
                                 <div class="h-full rounded-full transition-all duration-500" style="width: ${Math.min(acaraPercentage, 100)}%; background: ${acaraStatus.color}"></div>
                             </div>
